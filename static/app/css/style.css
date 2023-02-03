@@ -1,0 +1,16 @@
+body {
+  height: 100vh;
+  background-color: #e9ecef;
+}
+
+@media (min-width: 1400px) {
+  .container,
+  .container-lg,
+  .container-md,
+  .container-sm,
+  .container-xl,
+  .container-xxl {
+    max-width: 1000px !important;
+    padding: 100px;
+  }
+}

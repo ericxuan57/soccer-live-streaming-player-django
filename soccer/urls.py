@@ -18,6 +18,6 @@ from django.urls import include, path
 from app import views
 
 urlpatterns = [
-    path('', views.Index.as_view(), name='index'),
+    path('', views.SoccerView.as_view(), name='index'),
     path('admin/', admin.site.urls),
 ]
