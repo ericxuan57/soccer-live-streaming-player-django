@@ -1,10 +1,10 @@
 from django.shortcuts import render
-from .models import Soccer
+from .models import Soccer, Stadium
 from django.http import HttpResponse
 from json import dumps
 from datetime import datetime
 def index(request):
-    obj = Soccer.objects.all().values()
+    obj = Stadium.objects.all().values()
 
     data = []
     for row in obj:
@@ -15,8 +15,8 @@ def index(request):
     return render(request, 'index.html', {'data': dataJSON})
 
 def get(request):
-    strStartDateTime = request.GET["date"] + " " + request.GET["startTime"] + ":00"
-    strEndDateTime = request.GET["date"] + " " + request.GET["endTime"] + ":00"
+    strStartDateTime = request.GET["date"] + " " + request.GET["startTime"]
+    strEndDateTime = request.GET["date"] + " " + request.GET["endTime"]
     startDateTime = datetime.strptime(strStartDateTime, '%Y-%m-%d %H:%M:%S')
     endDateTime = datetime.strptime(strEndDateTime, '%Y-%m-%d %H:%M:%S')
 

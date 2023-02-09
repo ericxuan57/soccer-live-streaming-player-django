@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
     {% load static %}
+    <link rel="icon" type="image/x-icon" href="{% static 'app/images/favicon.png' %}">
     <link rel="stylesheet" href="{% static 'app/css/style.css' %}" />
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
@@ -30,6 +31,7 @@
     <main role="main" class="container d-flex flex-column justify-content-center align-items-center h-100">
       <div class="d-flex justify-content-between w-100">
         <button type="button" class="btn btn-primary btn-lg btn-live" value="Live!">Live!</button>
+        <label for="playDate" class="d-flex justify-content-center align-items-center text-nowrap" id="lblPlayDate"></label>
         <button type="button" class="btn btn-primary btn-lg btn-date-picker" data-bs-toggle="modal" data-bs-target="#dateTimePickerModal">
           Pick a Time
         </button>
@@ -48,11 +50,11 @@
                 <div class="mt-2 mb-2 d-flex">
                   <div class="float-left w-50 pe-3">
                     <label for="date" class="col-form-label">Start time:</label>
-                    <input id="startTime" class="form-control" type="time" />
+                    <input id="startTime" class="form-control" type="time" step="1" />
                   </div>
                   <div class="float-right w-50 ps-3">
                     <label for="date" class="col-form-label">End time:</label>
-                    <input id="endTime" class="form-control" type="time" />
+                    <input id="endTime" class="form-control" type="time" step="1" />
                   </div>
                 </div>
               </div>
@@ -67,12 +69,29 @@
       <div class="w-100 mt-3 position-relative">
         {% load static %}
         <img src="{% static 'app/images/stadium.png' %}" alt="" width="100%">
-        <!-- <canvas id="stadium"></canvas> -->
+        <canvas id="stadium"></canvas>
+        <div class="video-control-container d-flex align-items-center justify-content-center mt-3">
+          <button class="video-control play-button">
+            <span class="video-control-play">
+              <span class="video-control-symbol" aria-hidden="true">▶️</span>
+            </span>
+            <span class="video-control-pause">
+              <span class="video-control-symbol" aria-hidden="true">⏸</span>
+            </span>
+          </button>
+          <div class="w-100 ps-2 pe-3">
+            <input type="range" min="1" max="100" value="0" class="slider" id="playerRange">
+            <div>
+              <label id="lblStartTime">0:00:00</label>
+              <label id="lblEndTime"></label>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
     <script>
-      var data = JSON.parse("{{data|escapejs}}");
-      console.log(data);
+      const canvas = this.__canvas = new fabric.StaticCanvas('stadium');
+      const stadiumData = JSON.parse("{{data|escapejs}}");
 
       $(".btn-save").click(function(){
         var date = $("#date").val();
@@ -89,6 +108,8 @@
           return;
         }
 
+        var duration = formatTime(Date.parse('01/01/2023 ' + endTime) - Date.parse('01/01/2023 ' + startTime));
+
         $.ajax({
           type:"GET",
           url: "/get",
@@ -100,10 +121,50 @@
           success: function( data ) {
             var arr = JSON.parse(data);
             console.log(arr);
+
             $('#dateTimePickerModal').modal('hide');
+
+            $("#lblPlayDate").text(date);
+            $("#lblEndTime").text(duration);
+
+            var player = new fabric.Circle({
+              left: 0,
+              top: 0,
+              radius: 12,
+              fill: 'red',
+            });
+
+            // Using the animate method
+            player.animate({top: '+=100', left: '+=100'}, {
+              onChange: canvas.renderAll.bind(canvas),
+              duration: 1000,
+            });
+
+            // Add it to the canvas
+            canvas.add(player);
           }
         })
       });
+
+      $('.play-button').click(function() {
+        this.classList.toggle('playing');
+      })
+
+      // videoElement.addEventListener('ended', () => {
+      //   $('.play-button').classList.remove('playing');
+      // });
+
+      const formatTime = milliseconds => {
+        const seconds = Math.floor((milliseconds / 1000) % 60);
+        const minutes = Math.floor((milliseconds / 1000 / 60) % 60);
+        const hours = Math.floor((milliseconds / 1000 / 60 / 60) % 24);
+
+        return [
+          hours.toString().padStart(2, "0"),
+          minutes.toString().padStart(2, "0"),
+          seconds.toString().padStart(2, "0")
+        ].join(":");
+      }
     </script>
   </body>
 </html>
