@@ -1,6 +1,6 @@
 body {
   height: 100vh;
-  background-color: #e9ecef;
+  background-color: #e0e0e0 !important;
 }
 
 @media (min-width: 1400px) {
@@ -14,10 +14,76 @@ body {
     padding: 100px;
   }
 }
-/* 
+
 #stadium {
-  width: 100px;
-  height: 100px;
-  position: relative;
-  z-index: 20;
-} */
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.slide-container {
+  width: 100%;
+}
+
+.slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 10px;
+  background: #f8f8f8;
+  outline: none;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+}
+
+.slider:hover {
+  opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #00401f;
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #aa2c23;
+  cursor: pointer;
+}
+
+#lblEndTime {
+  float: right;
+}
+
+#lblPlayDate {
+  font-size: 26px;
+}
+
+.video-control-container {
+  background-color: #b39ea1;
+}
+.video-control {
+	text-align: left;
+  border: none;
+  background: transparent;
+  padding: 0px 0px 0px 10px;
+}
+
+.video-control:not(.playing) .video-control-pause,
+.video-control.playing .video-control-play {
+	display: none;
+}
+
+.video-control-symbol
+{
+	font: 1.75em/0 Apple Color Emoji;
+	vertical-align: -0.15em;
+}
