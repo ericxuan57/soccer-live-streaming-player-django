@@ -1,5 +1,13 @@
+html {
+  width: 100%;
+  height: 100%;
+  display: table;
+  margin: auto;
+}
 body {
-  height: 100vh;
+  height: 100%;
+  display: table-cell;
+  vertical-align: middle;
   background-color: #e0e0e0 !important;
 }
 
@@ -11,16 +19,53 @@ body {
   .container-xl,
   .container-xxl {
     max-width: 1000px !important;
-    padding: 100px;
+    /* padding: 100px; */
   }
 }
 
 #stadium {
   width: 100%;
-  height: 100%;
+  height: 100%; 
   position: absolute;
   top: 0;
   left: 0;
+}
+
+img, .video-control-container {
+  border-radius: 8px;
+}
+
+span.live-icon{
+  display: inline-block;
+  position: relative;
+  background-color: red;
+  width: 10px;
+  height: 10px;
+  margin-left: 10px;
+  border: 1px solid rgba(black, .1);
+  border-radius: 50%;
+  z-index: 1;
+}
+
+span.live-icon::before {
+  content: '';
+  display: block;
+  position: absolute;
+  background: rgba(255, 0, 0, 0.6);
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  z-index: -1;
+}
+
+@keyframes live {
+  0% {
+    transform: scale(1,1);
+  }
+  100% {
+    transform: scale(2.2,2.2);
+    background: rgba(red,0);
+  }
 }
 
 .slide-container {
@@ -35,6 +80,8 @@ body {
   outline: none;
   -webkit-transition: .2s;
   transition: opacity .2s;
+  border-radius: 3px;
+  cursor: pointer;
 }
 
 .slider:hover {
@@ -63,8 +110,8 @@ body {
   float: right;
 }
 
-#lblPlayDate {
-  font-size: 26px;
+#lblPlayDate, #lblPlayTime {
+  font-weight: 600;
 }
 
 .video-control-container {

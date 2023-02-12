@@ -28,10 +28,13 @@
     ></script>
   </head>
   <body>
-    <main role="main" class="container d-flex flex-column justify-content-center align-items-center h-100">
-      <div class="d-flex justify-content-between w-100">
-        <button type="button" class="btn btn-primary btn-lg btn-live" value="Live!">Live!</button>
-        <label for="playDate" class="d-flex justify-content-center align-items-center text-nowrap" id="lblPlayDate"></label>
+    <main role="main" class="container d-flex flex-column justify-content-center align-items-center py-0">
+      <div class="d-flex justify-content-between w-100 mt-4">
+        <button type="button" class="btn btn-primary btn-lg btn-live d-flex align-items-center" value="Live!">Live!<span class="live-icon"></span></button>
+        <div class="d-flex flex-column">
+          <label for="playDate" class="d-flex justify-content-center align-items-center" id="lblPlayDate"></label>
+          <label for="playTime" class="d-flex justify-content-center align-items-center" id="lblPlayTime"></label>
+        </div>
         <button type="button" class="btn btn-primary btn-lg btn-date-picker" data-bs-toggle="modal" data-bs-target="#dateTimePickerModal">
           Pick a Time
         </button>
@@ -70,21 +73,24 @@
         {% load static %}
         <img src="{% static 'app/images/stadium.png' %}" alt="" width="100%">
         <canvas id="stadium"></canvas>
-        <div class="video-control-container d-flex align-items-center justify-content-center mt-3">
-          <button class="video-control play-button">
-            <span class="video-control-play">
-              <span class="video-control-symbol" aria-hidden="true">▶️</span>
-            </span>
-            <span class="video-control-pause">
-              <span class="video-control-symbol" aria-hidden="true">⏸</span>
-            </span>
-          </button>
-          <div class="w-100 ps-2 pe-3">
-            <input type="range" min="1" max="100" value="0" class="slider" id="playerRange">
-            <div>
-              <label id="lblStartTime">0:00:00</label>
-              <label id="lblEndTime"></label>
-            </div>
+      </div>
+      <div class="video-control-container d-flex align-items-center justify-content-center w-100 mt-3 mb-4">
+        <button class="video-control play-button">
+          <span class="video-control-play">
+            <span class="video-control-symbol" aria-hidden="true">▶️</span>
+          </span>
+          <span class="video-control-pause">
+            <span class="video-control-symbol" aria-hidden="true">⏸</span>
+          </span>
+        </button>
+        <div class="w-100 ps-2 pe-3">
+          <input type="range" min="0" max="1" step="0.0001" value="0" class="slider" id="playerRange">
+          <div>
+            <label id="lblStartTime"></label>
+            <label id="lblEndTime"></label>
+            <label id="lblDuration" class="d-none"></label>
+            <label id="selectedDateTime" class="d-none"></label>
+            <label id="videoEnded" class="d-none"></label>
           </div>
         </div>
       </div>
@@ -92,6 +98,10 @@
     <script>
       const canvas = this.__canvas = new fabric.StaticCanvas('stadium');
       const stadiumData = JSON.parse("{{data|escapejs}}");
+      var globalID,
+          current = 0,
+          current_index = 0,
+          click_count = 0;
 
       $(".btn-save").click(function(){
         var date = $("#date").val();
@@ -103,16 +113,19 @@
           return;
         }
 
-        if(Date.parse('01/01/2023 ' + startTime) > Date.parse('01/01/2023 ' + endTime)) {
+        if(Date.parse('01/01/2023 ' + startTime) >= Date.parse('01/01/2023 ' + endTime)) {
           alert("The start date must be before the end date.");
           return;
         }
 
-        var duration = formatTime(Date.parse('01/01/2023 ' + endTime) - Date.parse('01/01/2023 ' + startTime));
+        var duration = Math.abs(Date.parse('01/01/2023 ' + endTime) - Date.parse('01/01/2023 ' + startTime)) / 1000;
+        var durationFormat = formatTime(Date.parse('01/01/2023 ' + endTime) - Date.parse('01/01/2023 ' + startTime));
+        $("#lblDuration").text(duration);
+        $("#selectedDateTime").text("true");
 
         $.ajax({
           type:"GET",
-          url: "/get",
+          url: "/get_range_data",
           data: {
             date: date,
             startTime: startTime,
@@ -120,44 +133,117 @@
           },
           success: function( data ) {
             var arr = JSON.parse(data);
-            console.log(arr);
 
             $('#dateTimePickerModal').modal('hide');
 
             $("#lblPlayDate").text(date);
-            $("#lblEndTime").text(duration);
+            $("#lblPlayTime").text(startTime + " ~ " + endTime);
+            $("#lblEndTime").text(durationFormat);
 
-            var player = new fabric.Circle({
-              left: 0,
-              top: 0,
-              radius: 12,
-              fill: 'red',
-            });
-
-            // Using the animate method
-            player.animate({top: '+=100', left: '+=100'}, {
-              onChange: canvas.renderAll.bind(canvas),
-              duration: 1000,
-            });
-
-            // Add it to the canvas
-            canvas.add(player);
+            $('.play-button').addClass("playing");
+            
+            //set timeline slider of video player
+            current = 0;
+            current_index = 0;
+            $("#videoEnded").text("false");
+            cancelAnimationFrame(globalID);
+            requestAnimationFrame(repeatOften);
           }
         })
       });
 
       $('.play-button').click(function() {
+        if($("#selectedDateTime").text() != "true") {
+          alert("Pick a date and time");
+          return;
+        }
+
         this.classList.toggle('playing');
+        cancelAnimationFrame(globalID);
+
+        if($("#videoEnded").text() == "true") {
+          current = 0;
+          current_index = 0;
+          $("#videoEnded").text("false");
+          globalID = requestAnimationFrame(repeatOften);
+        }else{
+          if ($('.play-button').hasClass('playing')) {
+            globalID = requestAnimationFrame(repeatOften);
+          }
+        }
       })
 
-      // videoElement.addEventListener('ended', () => {
-      //   $('.play-button').classList.remove('playing');
-      // });
+      $('.btn-live').click(function() {
+        var R = 6378137; // Earth’s mean radius in meter
+        var dLat = rad(-27.666230 - (-27.667014));
+        var dLong = rad(-48.531335 - (-48.531263));
+        var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(rad(-27.667014)) * Math.cos(rad(-27.666230)) *
+          Math.sin(dLong / 2) * Math.sin(dLong / 2);
+        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        var d = R * c;
+      });
 
-      const formatTime = milliseconds => {
+      var rad = function(x) {
+        return x * Math.PI / 180;
+      };
+
+      function repeatOften() {
+        let duration = Number($("#lblDuration").text());
+        globalID = requestAnimationFrame(repeatOften);
+        current_index ++;
+        onChangeSecond(current_index / 60);
+        if (current_index === 60) {
+            current ++;
+        }
+      }
+
+      function onChangeSecond(current_second) {
+        let duration = Number($("#lblDuration").text());
+        let current_percent = current_second / duration;
+        $("#lblStartTime").text(formatTimeFromSecond(current_second));
+        $("#playerRange").val(current_percent);
+        if(current_percent == 1) {
+          cancelAnimationFrame(globalID);
+          $('.play-button').removeClass('playing');
+          $("#videoEnded").text("true");
+        }
+      }
+
+      function drawPlayer(current_second) {
+        canvas.clear();
+
+        var player = new fabric.Circle({
+          left: current_second,
+          top: current_second,
+          radius: 8,
+          fill: 'red',
+        });
+
+        canvas.add(player);
+
+        // player.animate({top: '+=100', left: '+=100'}, {
+        //   onChange: canvas.renderAll.bind(canvas),
+        //   duration: duration * 1000 / 2,
+        // });
+      }
+
+      function formatTime(milliseconds) {
         const seconds = Math.floor((milliseconds / 1000) % 60);
         const minutes = Math.floor((milliseconds / 1000 / 60) % 60);
         const hours = Math.floor((milliseconds / 1000 / 60 / 60) % 24);
+
+        return [
+          hours.toString().padStart(2, "0"),
+          minutes.toString().padStart(2, "0"),
+          seconds.toString().padStart(2, "0")
+        ].join(":");
+      }
+
+      function formatTimeFromSecond(second) {
+        const seconds = Math.floor(second % 60);
+        const minutes = Math.floor((second / 60) % 60);
+        const hours = Math.floor((second / 60 / 60) % 24);
 
         return [
           hours.toString().padStart(2, "0"),
