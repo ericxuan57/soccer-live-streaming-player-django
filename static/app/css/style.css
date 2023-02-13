@@ -110,8 +110,17 @@ span.live-icon::before {
   float: right;
 }
 
-#lblPlayDate, #lblPlayTime {
-  font-weight: 600;
+#lblCurrentTime {
+  font-weight: 400;
+  font-size: 20px;
+  text-align: center;
+}
+
+@media screen and (max-width: 460px) {
+  #lblCurrentTime {
+    font-weight: 400;
+    font-size: 17px;
+  }
 }
 
 .video-control-container {
