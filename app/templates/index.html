@@ -31,9 +31,8 @@
     <main role="main" class="container d-flex flex-column justify-content-center align-items-center py-0">
       <div class="d-flex justify-content-between w-100 mt-4">
         <button type="button" class="btn btn-primary btn-lg btn-live d-flex align-items-center" value="Live!">Live!<span class="live-icon"></span></button>
-        <div class="d-flex flex-column">
-          <label for="playDate" class="d-flex justify-content-center align-items-center" id="lblPlayDate"></label>
-          <label for="playTime" class="d-flex justify-content-center align-items-center" id="lblPlayTime"></label>
+        <div class="d-flex justify-content-center align-items-center">
+          <label for="playDate" class="d-flex justify-content-center align-items-center" id="lblCurrentTime"></label>
         </div>
         <button type="button" class="btn btn-primary btn-lg btn-date-picker" data-bs-toggle="modal" data-bs-target="#dateTimePickerModal">
           Pick a Time
@@ -84,7 +83,7 @@
           </span>
         </button>
         <div class="w-100 ps-2 pe-3">
-          <input type="range" min="0" max="1" step="0.0001" value="0" class="slider" id="playerRange">
+          <input type="range" min="0" max="1" step="0.00001" value="0" class="slider" id="playerRange" oninput="onValueChange(this.value)">
           <div>
             <label id="lblStartTime"></label>
             <label id="lblEndTime"></label>
@@ -99,14 +98,14 @@
       const canvas = this.__canvas = new fabric.StaticCanvas('stadium');
       const stadiumData = JSON.parse("{{data|escapejs}}");
       var globalID,
-          current = 0,
-          current_index = 0,
-          click_count = 0;
+          current_index = 0;
 
       $(".btn-save").click(function(){
-        var date = $("#date").val();
-        var startTime = $("#startTime").val();
-        var endTime = $("#endTime").val();
+        let date = $("#date").val();
+        let startTime = $("#startTime").val();
+        let endTime = $("#endTime").val();
+        let duration = Math.abs(Date.parse('01/01/2023 ' + endTime) - Date.parse('01/01/2023 ' + startTime)) / 1000;
+        let durationFormat = formatTimeFromMilliseconds(Date.parse('01/01/2023 ' + endTime) - Date.parse('01/01/2023 ' + startTime));
 
         if(date == "" || startTime == "" || endTime == "") {
           alert("Choose a date and time.");
@@ -117,9 +116,7 @@
           alert("The start date must be before the end date.");
           return;
         }
-
-        var duration = Math.abs(Date.parse('01/01/2023 ' + endTime) - Date.parse('01/01/2023 ' + startTime)) / 1000;
-        var durationFormat = formatTime(Date.parse('01/01/2023 ' + endTime) - Date.parse('01/01/2023 ' + startTime));
+        
         $("#lblDuration").text(duration);
         $("#selectedDateTime").text("true");
 
@@ -135,15 +132,11 @@
             var arr = JSON.parse(data);
 
             $('#dateTimePickerModal').modal('hide');
-
-            $("#lblPlayDate").text(date);
-            $("#lblPlayTime").text(startTime + " ~ " + endTime);
             $("#lblEndTime").text(durationFormat);
 
             $('.play-button').addClass("playing");
             
             //set timeline slider of video player
-            current = 0;
             current_index = 0;
             $("#videoEnded").text("false");
             cancelAnimationFrame(globalID);
@@ -162,8 +155,7 @@
         cancelAnimationFrame(globalID);
 
         if($("#videoEnded").text() == "true") {
-          current = 0;
-          current_index = 0;
+          // current_index = 0;
           $("#videoEnded").text("false");
           globalID = requestAnimationFrame(repeatOften);
         }else{
@@ -189,24 +181,47 @@
       };
 
       function repeatOften() {
-        let duration = Number($("#lblDuration").text());
         globalID = requestAnimationFrame(repeatOften);
         current_index ++;
         onChangeSecond(current_index / 60);
-        if (current_index === 60) {
-            current ++;
-        }
       }
 
       function onChangeSecond(current_second) {
         let duration = Number($("#lblDuration").text());
         let current_percent = current_second / duration;
+        let current_date = $('#date').val();
+        
+        const date = new Date($("#date").val() + " " + $("#startTime").val());
+        date.setHours(date.getHours() + 1);
+        const current_time = date.setSeconds(date.getSeconds() + current_second);
+        
+        $("#lblCurrentTime").text(current_date + " / " + formatTimeFromMilliseconds(current_time));
         $("#lblStartTime").text(formatTimeFromSecond(current_second));
+
         $("#playerRange").val(current_percent);
-        if(current_percent == 1) {
+        if(current_percent >= 1) {
           cancelAnimationFrame(globalID);
+          current_index = 0;
           $('.play-button').removeClass('playing');
           $("#videoEnded").text("true");
+        }
+      }
+
+      function onValueChange(value) {
+        if($("#selectedDateTime").text() != "true") {
+          return;
+        }
+        let duration = Number($("#lblDuration").text());
+        let classList = $('.play-button').attr('class');
+        let arrClass = classList.split(/\s+/);
+        let playStatus = arrClass.includes('playing');
+        current_index = duration * value * 60;
+
+        cancelAnimationFrame(globalID);
+        if(playStatus) {
+          repeatOften();
+        }else{
+          onChangeSecond(duration * value);
         }
       }
 
@@ -228,7 +243,7 @@
         // });
       }
 
-      function formatTime(milliseconds) {
+      function formatTimeFromMilliseconds(milliseconds) {
         const seconds = Math.floor((milliseconds / 1000) % 60);
         const minutes = Math.floor((milliseconds / 1000 / 60) % 60);
         const hours = Math.floor((milliseconds / 1000 / 60 / 60) % 24);
