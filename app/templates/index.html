@@ -191,11 +191,11 @@
         let current_percent = current_second / duration;
         let current_date = $('#date').val();
         
-        const date = new Date($("#date").val() + " " + $("#startTime").val());
-        date.setHours(date.getHours() + 1);
-        const current_time = date.setSeconds(date.getSeconds() + current_second);
+        const startDate = new Date($("#date").val() + " " + $("#startTime").val());
+        const currentDate = new Date(startDate.getTime() + current_second * 1000);
+        const strCurrentDate = $("#date").val() + " / " + currentDate.getHours() + ":" + currentDate.getMinutes() + ":" + currentDate.getSeconds();
         
-        $("#lblCurrentTime").text(current_date + " / " + formatTimeFromMilliseconds(current_time));
+        $("#lblCurrentTime").text(strCurrentDate);
         $("#lblStartTime").text(formatTimeFromSecond(current_second));
 
         $("#playerRange").val(current_percent);
