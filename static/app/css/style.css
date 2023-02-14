@@ -1,3 +1,7 @@
+:root {
+  --button-color: #00401f;
+}
+
 html {
   width: 100%;
   height: 100%;
@@ -116,30 +120,70 @@ span.live-icon::before {
   text-align: center;
 }
 
+.play-button-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 14px;
+  height: 14px;
+  padding: 17px;
+  border: 0.2rem solid var(--button-color);
+  border-radius: 50%;
+}
+
+.play {
+  height: 0;
+  width: 0;
+  margin: 0;
+  padding: 0;
+  margin-left: 4.8px;
+  /*margin-left: 17px;*/
+  background: none;
+  border: none;
+  border-top: 10.5px solid transparent;
+  border-bottom: 10.5px solid transparent;
+  border-left: 18px solid #00401f;
+}
+
+.pause {
+  position: relative;
+  background: none;
+  border: none;
+  height: 18px;
+  width: 28px;
+  margin: 0;
+  padding: 0;
+}
+
+.pause::before {
+  content: "";
+  position: absolute;
+  top: 0px;
+  height: 18px;
+  width: 5px;
+  margin-left: 2px;
+  background: var(--button-color);
+  left: 0;
+}
+
+.pause::after {
+  content: "";
+  position: absolute;
+  top: 0px;
+  height: 18px;
+  width: 5px;
+  margin-right: 2px;
+  background: var(--button-color);
+  right: 0;
+}
+
+.hidden {
+  display:none;
+}
+
 @media screen and (max-width: 460px) {
   #lblCurrentTime {
     font-weight: 400;
     font-size: 17px;
   }
-}
-
-.video-control-container {
-  background-color: #b39ea1;
-}
-.video-control {
-	text-align: left;
-  border: none;
-  background: transparent;
-  padding: 0px 0px 0px 10px;
-}
-
-.video-control:not(.playing) .video-control-pause,
-.video-control.playing .video-control-play {
-	display: none;
-}
-
-.video-control-symbol
-{
-	font: 1.75em/0 Apple Color Emoji;
-	vertical-align: -0.15em;
 }

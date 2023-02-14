@@ -68,20 +68,18 @@
           </div>
         </div>
       </div>
+
       <div class="w-100 mt-3 position-relative">
         {% load static %}
         <img src="{% static 'app/images/stadium.png' %}" alt="" width="100%">
         <canvas id="stadium"></canvas>
       </div>
+
       <div class="video-control-container d-flex align-items-center justify-content-center w-100 mt-3 mb-4">
-        <button class="video-control play-button">
-          <span class="video-control-play">
-            <span class="video-control-symbol" aria-hidden="true">▶️</span>
-          </span>
-          <span class="video-control-pause">
-            <span class="video-control-symbol" aria-hidden="true">⏸</span>
-          </span>
-        </button>
+        <div class="play-button-container">
+          <button role="play" class="play"></button>
+          <button role="pause" class="pause hidden"></button>
+        </div>
         <div class="w-100 ps-2 pe-3">
           <input type="range" min="0" max="1" step="0.00001" value="0" class="slider" id="playerRange" oninput="onValueChange(this.value)">
           <div>
@@ -97,8 +95,7 @@
     <script>
       const canvas = this.__canvas = new fabric.StaticCanvas('stadium');
       const stadiumData = JSON.parse("{{data|escapejs}}");
-      var globalID,
-          current_index = 0;
+      var globalID, current_index = 0;
 
       $(".btn-save").click(function(){
         let date = $("#date").val();
@@ -134,7 +131,9 @@
             $('#dateTimePickerModal').modal('hide');
             $("#lblEndTime").text(durationFormat);
 
-            $('.play-button').addClass("playing");
+            $('.play-button-container').addClass("playing");
+            $('.pause').removeClass("hidden");
+            $('.play').addClass("hidden");
             
             //set timeline slider of video player
             current_index = 0;
@@ -145,21 +144,23 @@
         })
       });
 
-      $('.play-button').click(function() {
+      $('.play-button-container').click(function() {
         if($("#selectedDateTime").text() != "true") {
           alert("Pick a date and time");
           return;
         }
 
-        this.classList.toggle('playing');
+        const buttons = Array.from(this.children);
+        buttons.forEach(button => button.classList.toggle('hidden'));
+        this.classList.toggle("playing");
+
         cancelAnimationFrame(globalID);
 
         if($("#videoEnded").text() == "true") {
-          // current_index = 0;
           $("#videoEnded").text("false");
           globalID = requestAnimationFrame(repeatOften);
         }else{
-          if ($('.play-button').hasClass('playing')) {
+          if ($('.play-button-container').hasClass('playing')) {
             globalID = requestAnimationFrame(repeatOften);
           }
         }
@@ -202,7 +203,11 @@
         if(current_percent >= 1) {
           cancelAnimationFrame(globalID);
           current_index = 0;
-          $('.play-button').removeClass('playing');
+
+          $('.play-button-container').removeClass('playing');
+          $('.pause').addClass("hidden");
+          $('.play').removeClass("hidden");
+
           $("#videoEnded").text("true");
         }
       }
@@ -211,13 +216,15 @@
         if($("#selectedDateTime").text() != "true") {
           return;
         }
+
         let duration = Number($("#lblDuration").text());
-        let classList = $('.play-button').attr('class');
+        let classList = $('.play-button-container').attr('class');
         let arrClass = classList.split(/\s+/);
         let playStatus = arrClass.includes('playing');
         current_index = duration * value * 60;
 
         cancelAnimationFrame(globalID);
+        
         if(playStatus) {
           repeatOften();
         }else{
