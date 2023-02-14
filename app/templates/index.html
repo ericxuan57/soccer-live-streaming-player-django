@@ -110,10 +110,11 @@
         }
 
         if(Date.parse('01/01/2023 ' + startTime) >= Date.parse('01/01/2023 ' + endTime)) {
-          alert("The start date must be before the end date.");
+          alert("The end date must be later than the start date.");
           return;
         }
         
+        // add value to the hidden field
         $("#lblDuration").text(duration);
         $("#selectedDateTime").text("true");
 
@@ -135,7 +136,7 @@
             $('.pause').removeClass("hidden");
             $('.play').addClass("hidden");
             
-            //set timeline slider of video player
+            //start requestAnimationFrame
             current_index = 0;
             $("#videoEnded").text("false");
             cancelAnimationFrame(globalID);
@@ -194,12 +195,12 @@
         
         const startDate = new Date($("#date").val() + " " + $("#startTime").val());
         const currentDate = new Date(startDate.getTime() + current_second * 1000);
-        const strCurrentDate = $("#date").val() + " / " + currentDate.getHours() + ":" + currentDate.getMinutes() + ":" + currentDate.getSeconds();
+        const currentDateFormat = $("#date").val() + " / " + currentDate.getHours() + ":" + currentDate.getMinutes() + ":" + currentDate.getSeconds();
         
-        $("#lblCurrentTime").text(strCurrentDate);
+        $("#lblCurrentTime").text(currentDateFormat);
         $("#lblStartTime").text(formatTimeFromSecond(current_second));
-
         $("#playerRange").val(current_percent);
+        
         if(current_percent >= 1) {
           cancelAnimationFrame(globalID);
           current_index = 0;
