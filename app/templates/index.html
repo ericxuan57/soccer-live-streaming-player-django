@@ -195,12 +195,12 @@
         
         const startDate = new Date($("#date").val() + " " + $("#startTime").val());
         const currentDate = new Date(startDate.getTime() + current_second * 1000);
-        const currentDateFormat = $("#date").val() + " / " + currentDate.getHours() + ":" + currentDate.getMinutes() + ":" + currentDate.getSeconds();
+        const currentTimeStampFormat = $("#date").val() + " / " + currentDate.getHours().toString().padStart(2, "0") + ":" + currentDate.getMinutes().toString().padStart(2, "0") + ":" + currentDate.getSeconds().toString().padStart(2, "0");
         
-        $("#lblCurrentTime").text(currentDateFormat);
+        $("#lblCurrentTime").text(currentTimeStampFormat);
         $("#lblStartTime").text(formatTimeFromSecond(current_second));
         $("#playerRange").val(current_percent);
-        
+
         if(current_percent >= 1) {
           cancelAnimationFrame(globalID);
           current_index = 0;
