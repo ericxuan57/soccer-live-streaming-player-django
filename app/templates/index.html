@@ -95,7 +95,7 @@
     <script>
       const canvas = this.__canvas = new fabric.StaticCanvas('stadium');
       const stadiumData = JSON.parse("{{data|escapejs}}");
-      var globalID, current_index = 0;
+      var globalID, current_index = 0, range_data = [];
 
       $(".btn-save").click(function(){
         let date = $("#date").val();
@@ -127,7 +127,7 @@
             endTime: endTime,
           },
           success: function( data ) {
-            var arr = JSON.parse(data);
+            range_data = JSON.parse(data);
 
             $('#dateTimePickerModal').modal('hide');
             $("#lblEndTime").text(durationFormat);
@@ -167,21 +167,6 @@
         }
       })
 
-      $('.btn-live').click(function() {
-        var R = 6378137; // Earth’s mean radius in meter
-        var dLat = rad(-27.666230 - (-27.667014));
-        var dLong = rad(-48.531335 - (-48.531263));
-        var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-          Math.cos(rad(-27.667014)) * Math.cos(rad(-27.666230)) *
-          Math.sin(dLong / 2) * Math.sin(dLong / 2);
-        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        var d = R * c;
-      });
-
-      var rad = function(x) {
-        return x * Math.PI / 180;
-      };
-
       function repeatOften() {
         globalID = requestAnimationFrame(repeatOften);
         current_index ++;
@@ -211,6 +196,8 @@
 
           $("#videoEnded").text("true");
         }
+
+        drawPlayer(current_second);
       }
 
       function onValueChange(value) {
@@ -235,6 +222,8 @@
 
       function drawPlayer(current_second) {
         canvas.clear();
+        const stadiumSize = getStadiumSize(stadiumData[0]);
+        console.log(stadiumSize);
 
         var player = new fabric.Circle({
           left: current_second,
@@ -250,6 +239,34 @@
         //   duration: duration * 1000 / 2,
         // });
       }
+
+      function getStadiumSize(arg) {
+        const arrC1 = arg.c1.split(',');
+        const arrC2 = arg.c2.split(',');
+        const arrC3 = arg.c3.split(',');
+        const width = getDistanceFromPoints(arg.c1, arg.c2);
+        const height = getDistanceFromPoints(arg.c1, arg.c3);
+        const result = [width, height];
+        return result;
+      }
+
+      function getDistanceFromPoints(point1, point2) {
+        const arrC1 = point1.split(',');
+        const arrC2 = point2.split(',');
+        var R = 6378137; // Earth’s mean radius in meter
+        var dLat = rad(parseFloat(arrC1[0]) - parseFloat(arrC2[0].trim()));
+        var dLong = rad(parseFloat(arrC1[1]) - parseFloat(arrC2[1].trim()));
+        var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(rad(parseFloat(arrC1[0]))) * Math.cos(rad(parseFloat(arrC2[0].trim()))) *
+          Math.sin(dLong / 2) * Math.sin(dLong / 2);
+        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        var d = R * c;
+        return d;
+      }
+
+      var rad = function(x) {
+        return x * Math.PI / 180;
+      };
 
       function formatTimeFromMilliseconds(milliseconds) {
         const seconds = Math.floor((milliseconds / 1000) % 60);
