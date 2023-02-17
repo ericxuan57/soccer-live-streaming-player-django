@@ -31,8 +31,9 @@
     <main role="main" class="container d-flex flex-column justify-content-center align-items-center py-0">
       <div class="d-flex justify-content-between w-100 mt-4">
         <button type="button" class="btn btn-primary btn-lg btn-live d-flex align-items-center" value="Live!">Live!<span class="live-icon"></span></button>
-        <div class="d-flex justify-content-center align-items-center">
-          <label for="playDate" class="d-flex justify-content-center align-items-center" id="lblCurrentTime"></label>
+        <div class="d-flex justify-content-center align-items-center label-container">
+          <span id="lblCurrentDate"></span>
+          <span id="lblCurrentTime"></span>
         </div>
         <button type="button" class="btn btn-primary btn-lg btn-date-picker" data-bs-toggle="modal" data-bs-target="#dateTimePickerModal">
           Pick a Time
@@ -83,8 +84,8 @@
         <div class="w-100 ps-2">
           <input type="range" min="0" max="1" step="0.00001" value="0" class="slider" id="playerRange" oninput="onValueChange(this.value)">
           <div>
-            <label id="lblStartTime"></label>
-            <label id="lblEndTime"></label>
+            <label id="lblStartTime">0:00:00</label>
+            <label id="lblEndTime">0:00:00</label>
             <label id="lblDuration" class="d-none"></label>
             <label id="selectedDateTime" class="d-none"></label>
             <label id="videoEnded" class="d-none"></label>
@@ -185,7 +186,7 @@
         canvas.requestRenderAll();
         
         $('#stadiumImage').css({'width': `${stadiumSize[0] * 10}px`, 'height': `${stadiumSize[1] * 10}px`});
-        $('#stadiumImage').css('zoom', zoom);
+        $('#stadiumImage').css({'width': `${stadiumSize[0] * 10 * zoom}px`, 'height': `${stadiumSize[1] * 10 * zoom}px`});
       }
 
       function repeatOften() {
@@ -202,9 +203,10 @@
         const startDate = new Date($("#date").val() + " " + $("#startTime").val());
         const currentDate = new Date(startDate.getTime() + current_second * 1000);
         const currentTimeStamp = $("#date").val() + " " + currentDate.getHours().toString().padStart(2, "0") + ":" + currentDate.getMinutes().toString().padStart(2, "0") + ":" + currentDate.getSeconds().toString().padStart(2, "0");
-        const currentTimeStampFormat = $("#date").val() + " / " + currentDate.getHours().toString().padStart(2, "0") + ":" + currentDate.getMinutes().toString().padStart(2, "0") + ":" + currentDate.getSeconds().toString().padStart(2, "0");
+        const currentTime = currentDate.getHours().toString().padStart(2, "0") + ":" + currentDate.getMinutes().toString().padStart(2, "0") + ":" + currentDate.getSeconds().toString().padStart(2, "0");
         
-        $("#lblCurrentTime").text(currentTimeStampFormat);
+        $("#lblCurrentDate").text(current_date + " /");
+        $("#lblCurrentTime").text(currentTime);
         $("#lblStartTime").text(formatTimeFromSecond(current_second));
         $("#playerRange").val(current_percent);
 
