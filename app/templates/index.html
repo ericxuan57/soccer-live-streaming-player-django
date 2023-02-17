@@ -48,15 +48,15 @@
               </div>
               <div class="modal-body py-4">
                 <label for="date" class="col-form-label pt-0">Date:</label>
-                <input id="date" class="form-control" type="date" />
+                <input id="date" class="form-control" type="date" value="2023-02-07" />
                 <div class="mt-2 mb-2 d-flex">
                   <div class="float-left w-50 pe-3">
                     <label for="date" class="col-form-label">Start time:</label>
-                    <input id="startTime" class="form-control" type="time" step="1" />
+                    <input id="startTime" class="form-control" type="time" step="1" value="11:47:56" />
                   </div>
                   <div class="float-right w-50 ps-3">
                     <label for="date" class="col-form-label">End time:</label>
-                    <input id="endTime" class="form-control" type="time" step="1" />
+                    <input id="endTime" class="form-control" type="time" step="1" value="11:48:20" />
                   </div>
                 </div>
               </div>
@@ -69,9 +69,9 @@
         </div>
       </div>
 
-      <div class="w-100 mt-3 position-relative">
+      <div class="w-100 mt-3 position-relative stadium-container">
         {% load static %}
-        <img src="{% static 'app/images/stadium.png' %}" alt="" width="100%">
+        <img src="{% static 'app/images/stadium.png' %}" id="stadiumImage" alt="">
         <canvas id="stadium"></canvas>
       </div>
 
@@ -80,7 +80,7 @@
           <button role="play" class="play"></button>
           <button role="pause" class="pause hidden"></button>
         </div>
-        <div class="w-100 ps-2 pe-3">
+        <div class="w-100 ps-2">
           <input type="range" min="0" max="1" step="0.00001" value="0" class="slider" id="playerRange" oninput="onValueChange(this.value)">
           <div>
             <label id="lblStartTime"></label>
@@ -93,14 +93,18 @@
       </div>
     </main>
     <script>
-      const canvas = this.__canvas = new fabric.StaticCanvas('stadium');
+      var canvas = new fabric.Canvas("stadium");
+
       const stadiumData = JSON.parse("{{data|escapejs}}");
-      var globalID, current_index = 0, range_data = [];
-      var stadiumSize = getStadiumSize(stadiumData[0]);
-      var line1 = parseFloat(getDistanceFromPoints(stadiumData[0].c1, stadiumData[0].c2));
-      var line2 = parseFloat(getDistanceFromPoints(stadiumData[0].c2, stadiumData[0].c4));
-      var line3 = parseFloat(getDistanceFromPoints(stadiumData[0].c3, stadiumData[0].c4));
-      var line4 = parseFloat(getDistanceFromPoints(stadiumData[0].c1, stadiumData[0].c3));
+
+      var globalID, current_index = 0, player_data = [];
+      var stadiumSize = getStadiumSize(stadiumData);
+      var line1 = parseFloat(getDistanceFromPoints(stadiumData.c1, stadiumData.c2));
+      var line2 = parseFloat(getDistanceFromPoints(stadiumData.c2, stadiumData.c4));
+      var line3 = parseFloat(getDistanceFromPoints(stadiumData.c3, stadiumData.c4));
+      var line4 = parseFloat(getDistanceFromPoints(stadiumData.c1, stadiumData.c3));
+
+      initCanvas();
 
       $(".btn-save").click(function(){
         let date = $("#date").val();
@@ -125,14 +129,14 @@
 
         $.ajax({
           type:"GET",
-          url: "/get_range_data",
+          url: "/get_player_data",
           data: {
             date: date,
             startTime: startTime,
             endTime: endTime,
           },
           success: function( data ) {
-            range_data = JSON.parse(data);
+            player_data = JSON.parse(data);
 
             $('#dateTimePickerModal').modal('hide');
             $("#lblEndTime").text(durationFormat);
@@ -172,6 +176,18 @@
         }
       })
 
+      function initCanvas() {
+        const stadiumContainerWidth = $('.stadium-container').width();
+        const zoom = stadiumContainerWidth / (stadiumSize[0] * 10);
+
+        canvas.setZoom(zoom);
+        canvas.setDimensions({width: stadiumSize[0] * 10 * zoom, height: stadiumSize[1] * 10 * zoom});
+        canvas.requestRenderAll();
+        
+        $('#stadiumImage').css({'width': `${stadiumSize[0] * 10}px`, 'height': `${stadiumSize[1] * 10}px`});
+        $('#stadiumImage').css('zoom', zoom);
+      }
+
       function repeatOften() {
         globalID = requestAnimationFrame(repeatOften);
         current_index ++;
@@ -185,6 +201,7 @@
         
         const startDate = new Date($("#date").val() + " " + $("#startTime").val());
         const currentDate = new Date(startDate.getTime() + current_second * 1000);
+        const currentTimeStamp = $("#date").val() + " " + currentDate.getHours().toString().padStart(2, "0") + ":" + currentDate.getMinutes().toString().padStart(2, "0") + ":" + currentDate.getSeconds().toString().padStart(2, "0");
         const currentTimeStampFormat = $("#date").val() + " / " + currentDate.getHours().toString().padStart(2, "0") + ":" + currentDate.getMinutes().toString().padStart(2, "0") + ":" + currentDate.getSeconds().toString().padStart(2, "0");
         
         $("#lblCurrentTime").text(currentTimeStampFormat);
@@ -202,7 +219,7 @@
           $("#videoEnded").text("true");
         }
 
-        drawPlayer(current_second);
+        drawPlayer(current_second, currentTimeStamp);
       }
 
       function onValueChange(value) {
@@ -225,36 +242,41 @@
         }
       }
 
-      function drawPlayer(current_second) {
-        canvas.clear();
+      function drawPlayer(current_second, currentTimeStamp) {
+        var point;
 
-        var player = new fabric.Circle({
-          left: current_second,
-          top: current_second,
-          radius: 8,
-          fill: 'red',
+        var object = canvas.item(canvas.getObjects().length-1);
+        canvas.remove(object);
+
+        player_data.some(function(data) {
+          if(currentTimeStamp == data.time_stamp) {
+            point = data.gps_data;
+            return;
+          }
         });
 
-        canvas.add(player);
+        if(!point) {
+          return;
+        }
 
-        const point = '-27.666705, -48.531624';
-        const distanceFromC1 = parseFloat(getDistanceFromPoints(stadiumData[0].c1, point));
-        const distanceFromC2 = parseFloat(getDistanceFromPoints(stadiumData[0].c2, point));
-        const distanceFromC3 = parseFloat(getDistanceFromPoints(stadiumData[0].c3, point));
+        const distanceFromC1 = parseFloat(getDistanceFromPoints(stadiumData.c1, point));
+        const distanceFromC2 = parseFloat(getDistanceFromPoints(stadiumData.c2, point));
+        const distanceFromC3 = parseFloat(getDistanceFromPoints(stadiumData.c3, point));
         const cos1 = (Math.pow(distanceFromC1, 2) + Math.pow(line1, 2) - Math.pow(distanceFromC2, 2)) / 2 / distanceFromC1 / line1;
         const sin1 = Math.sqrt(1-Math.pow(cos1, 2));
         const cos2 = (Math.pow(distanceFromC1, 2) + Math.pow(line4, 2) - Math.pow(distanceFromC3, 2)) / 2 / distanceFromC1 / line4;
         const sin2 = Math.sqrt(1-Math.pow(cos2, 2));
         const top = distanceFromC1 * sin1;
         const left = distanceFromC1 * sin2;
-        console.log("top", top);
-        console.log("left", left);
-        console.log("stadiumSize", stadiumSize);
 
-        // player.animate({top: '+=100', left: '+=100'}, {
-        //   onChange: canvas.renderAll.bind(canvas),
-        //   duration: duration * 1000 / 2,
-        // });
+        var player = new fabric.Circle({
+          left: left * 10,
+          top: top * 10,
+          radius: 10,
+          fill: 'red',
+        });
+
+        canvas.add(player);
       }
 
       function getStadiumSize(arg) {
@@ -309,6 +331,8 @@
           seconds.toString().padStart(2, "0")
         ].join(":");
       }
+
+      window.onresize = initCanvas
     </script>
   </body>
 </html>
