@@ -245,53 +245,59 @@
       }
 
       function drawPlayer(current_second, currentTimeStamp) {
-        var point;
-        var player_tshirt_number = '';
-
-        var object = canvas.item(canvas.getObjects().length-1);
-        canvas.remove(object);
+        var playerData = [];
 
         player_data.some(function(data) {
           if(currentTimeStamp == data.time_stamp) {
-            point = data.gps_data;
-            player_tshirt_number = data.player_tshirt_number;
-            return;
+            let player = {
+              point: data.gps_data,
+              player_tshirt_number: data.player_tshirt_number,
+            }
+            playerData.push(player);
           }
         });
 
-        if(!point) {
-          return;
+        if(playerData.length == 0) {
+          var object = canvas.item(canvas.getObjects().length-1);
+          canvas.remove(object);
+        }else{
+          for (let i = 0; i < playerData.length; i++) {
+            var object = canvas.item(canvas.getObjects().length-i-1);
+            canvas.remove(object);
+          }
         }
 
-        const distanceFromC1 = parseFloat(getDistanceFromPoints(stadiumData.c1, point));
-        const distanceFromC2 = parseFloat(getDistanceFromPoints(stadiumData.c2, point));
-        const distanceFromC3 = parseFloat(getDistanceFromPoints(stadiumData.c3, point));
-        const cos1 = (Math.pow(distanceFromC1, 2) + Math.pow(line1, 2) - Math.pow(distanceFromC2, 2)) / 2 / distanceFromC1 / line1;
-        const sin1 = Math.sqrt(1-Math.pow(cos1, 2));
-        const cos2 = (Math.pow(distanceFromC1, 2) + Math.pow(line4, 2) - Math.pow(distanceFromC3, 2)) / 2 / distanceFromC1 / line4;
-        const sin2 = Math.sqrt(1-Math.pow(cos2, 2));
-        const top = distanceFromC1 * sin1;
-        const left = distanceFromC1 * sin2;
+        playerData.map(function(player) {
+          const distanceFromC1 = parseFloat(getDistanceFromPoints(stadiumData.c1, player.point));
+          const distanceFromC2 = parseFloat(getDistanceFromPoints(stadiumData.c2, player.point));
+          const distanceFromC3 = parseFloat(getDistanceFromPoints(stadiumData.c3, player.point));
+          const cos1 = (Math.pow(distanceFromC1, 2) + Math.pow(line1, 2) - Math.pow(distanceFromC2, 2)) / 2 / distanceFromC1 / line1;
+          const sin1 = Math.sqrt(1-Math.pow(cos1, 2));
+          const cos2 = (Math.pow(distanceFromC1, 2) + Math.pow(line4, 2) - Math.pow(distanceFromC3, 2)) / 2 / distanceFromC1 / line4;
+          const sin2 = Math.sqrt(1-Math.pow(cos2, 2));
+          const top = distanceFromC1 * sin1;
+          const left = distanceFromC1 * sin2;
 
-        var player = new fabric.Circle({
-          left: left * 10,
-          top: top * 10,
-          radius: 10,
-          fill: 'red',
-        });
+          var player_circle = new fabric.Circle({
+            left: left * 10,
+            top: top * 10,
+            radius: 10,
+            fill: 'red',
+          });
 
-        var player_number = new fabric.Text(player_tshirt_number.toString(), {
-          fontSize: 22,
-          fontWeight: 'bold',
-          left: left * 10,
-          top: top * 10 - 20,
-        });
+          var player_number = new fabric.Text(player.player_tshirt_number.toString(), {
+            fontSize: 22,
+            fontWeight: 'bold',
+            left: left * 10,
+            top: top * 10 - 20,
+          });
 
-        var group = new fabric.Group([ player, player_number ]);
-        group.item(1).set('fill', 'red');
-        group.set('selectable', false);
-        
-        canvas.add(group);
+          var group = new fabric.Group([ player_circle, player_number ]);
+          group.item(1).set('fill', 'white');
+          group.set('selectable', false);
+          
+          canvas.add(group);
+        })
       }
 
       function getStadiumSize(arg) {
