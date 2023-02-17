@@ -257,15 +257,7 @@
           }
         });
 
-        if(playerData.length == 0) {
-          var object = canvas.item(canvas.getObjects().length-1);
-          canvas.remove(object);
-        }else{
-          for (let i = 0; i < playerData.length; i++) {
-            var object = canvas.item(canvas.getObjects().length-i-1);
-            canvas.remove(object);
-          }
-        }
+        canvas.remove(...canvas.getObjects());
 
         playerData.map(function(player) {
           const distanceFromC1 = parseFloat(getDistanceFromPoints(stadiumData.c1, player.point));
