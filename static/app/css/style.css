@@ -12,7 +12,8 @@ body {
   height: 100%;
   display: table-cell;
   vertical-align: middle;
-  background-color: #e0e0e0 !important;
+  background: rgb(249,252,255);
+  background: radial-gradient(circle, rgba(249,252,255,0.7259278711484594) 0%, rgba(114,166,159,0.7931547619047619) 98%);
 }
 
 @media (min-width: 1400px) {
@@ -23,7 +24,6 @@ body {
   .container-xl,
   .container-xxl {
     max-width: 1000px !important;
-    /* padding: 100px; */
   }
 }
 
@@ -112,13 +112,24 @@ span.live-icon::before {
   cursor: pointer;
 }
 
+#lblStartTime, #lblEndTime {
+  font-weight: 600;
+}
+
 #lblEndTime {
   float: right;
 }
 
+#lblCurrentDate {
+  padding-right: 5px;
+  margin: auto;
+  font-size: 20px;
+  text-align: center;
+}
+
 #lblCurrentTime {
-  font-weight: 400;
-  font-size: 24px;
+  font-weight: 700;
+  font-size: 25px;
   text-align: center;
 }
 
@@ -183,16 +194,26 @@ span.live-icon::before {
   display:none;
 }
 
-@media screen and (max-width: 500px) {
+@media screen and (max-width: 480px) {
+  #lblCurrentDate {
+    width: 100%;
+    font-size: 15px;
+  }
   #lblCurrentTime {
-    font-weight: 450;
-    font-size: 18px;
+    font-weight: 700;
+    font-size: 19px;
   }
   .btn-live, .btn-date-picker {
-    padding-left: 12px !important;
-    padding-right: 12px !important;
-    padding-top: 6px !important;
-    padding-bottom: 6px !important;
-    font-size: 1rem !important;
+    padding-left: 13px !important;
+    padding-right: 13px !important;
+    padding-top: 7px !important;
+    padding-bottom: 7px !important;
+    font-size: 1.1rem !important;
+  }
+}
+
+@media screen and (max-width: 400px) {
+  .label-container {
+    flex-direction: column;
   }
 }
