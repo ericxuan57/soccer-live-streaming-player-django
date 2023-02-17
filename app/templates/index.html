@@ -246,6 +246,7 @@
 
       function drawPlayer(current_second, currentTimeStamp) {
         var point;
+        var player_tshirt_number = '';
 
         var object = canvas.item(canvas.getObjects().length-1);
         canvas.remove(object);
@@ -253,6 +254,7 @@
         player_data.some(function(data) {
           if(currentTimeStamp == data.time_stamp) {
             point = data.gps_data;
+            player_tshirt_number = data.player_tshirt_number;
             return;
           }
         });
@@ -278,7 +280,18 @@
           fill: 'red',
         });
 
-        canvas.add(player);
+        var player_number = new fabric.Text(player_tshirt_number.toString(), {
+          fontSize: 22,
+          fontWeight: 'bold',
+          left: left * 10,
+          top: top * 10 - 20,
+        });
+
+        var group = new fabric.Group([ player, player_number ]);
+        group.item(1).set('fill', 'red');
+        group.set('selectable', false);
+        
+        canvas.add(group);
       }
 
       function getStadiumSize(arg) {
