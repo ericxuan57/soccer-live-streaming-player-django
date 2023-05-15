@@ -1,9 +1,10 @@
-from django.shortcuts import render
 from django.http import HttpResponse
-from json import dumps
+from django.shortcuts import render
+
 from datetime import datetime
-import pymysql
 import environ
+from json import dumps
+import pymysql
 
 env = environ.Env()
 environ.Env.read_env()
