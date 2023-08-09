@@ -86,7 +86,7 @@
                   id="date"
                   class="form-control"
                   type="date"
-                  value="2023-03-25"
+                  value="2023-07-29"
                 />
                 <div class="mt-2 mb-2 d-flex">
                   <div class="float-left w-50 pe-3">
@@ -96,7 +96,7 @@
                       class="form-control"
                       type="time"
                       step="1"
-                      value="12:15:35"
+                      value="19:52:20"
                     />
                   </div>
                   <div class="float-right w-50 ps-3">
@@ -106,7 +106,7 @@
                       class="form-control"
                       type="time"
                       step="1"
-                      value="13:51:25"
+                      value="19:56:59"
                     />
                   </div>
                 </div>
@@ -167,24 +167,24 @@
       </div>
     </main>
     <script>
-      var canvas = new fabric.Canvas("stadium");
+      const canvas = new fabric.Canvas("stadium");
 
       const stadiumData = JSON.parse("{{data|escapejs}}");
 
       var globalID,
-        current_index = 0,
-        player_data = [];
-      var stadiumSize = getStadiumSize(stadiumData);
-      var line1 = parseFloat(
+          currentIndex = 0,
+          playerData = [];
+      const stadiumSize = getStadiumSize(stadiumData);
+      const line1 = parseFloat(
         getDistanceFromPoints(stadiumData.c1, stadiumData.c2)
       );
-      var line2 = parseFloat(
+      const line2 = parseFloat(
         getDistanceFromPoints(stadiumData.c2, stadiumData.c4)
       );
-      var line3 = parseFloat(
+      const line3 = parseFloat(
         getDistanceFromPoints(stadiumData.c3, stadiumData.c4)
       );
-      var line4 = parseFloat(
+      const line4 = parseFloat(
         getDistanceFromPoints(stadiumData.c1, stadiumData.c3)
       );
 
@@ -230,7 +230,7 @@
             endTime: endTime,
           },
           success: function (data) {
-            player_data = JSON.parse(data);
+            playerData = JSON.parse(data);
 
             $("#dateTimePickerModal").modal("hide");
             $("#lblEndTime").text(durationFormat);
@@ -240,7 +240,7 @@
             $(".play").addClass("hidden");
 
             //start requestAnimationFrame
-            current_index = 0;
+            currentIndex = 0;
             $("#videoEnded").text("false");
             cancelAnimationFrame(globalID);
             requestAnimationFrame(repeatOften);
@@ -293,20 +293,20 @@
 
       function repeatOften() {
         globalID = requestAnimationFrame(repeatOften);
-        current_index++;
-        onChangeSecond(current_index / 60);
+        currentIndex++;
+        onChangeSecond(currentIndex / 60);
       }
 
-      function onChangeSecond(current_second) {
+      function onChangeSecond(currentSecond) {
         let duration = Number($("#lblDuration").text());
-        let current_percent = current_second / duration;
-        let current_date = $("#date").val();
+        let currentPercent = currentSecond / duration;
+        let textCurrentDate = $("#date").val();
 
         const startDate = new Date(
           $("#date").val() + " " + $("#startTime").val()
         );
         const currentDate = new Date(
-          startDate.getTime() + current_second * 1000
+          startDate.getTime() + currentSecond * 1000
         );
         const currentTimeStamp =
           $("#date").val() +
@@ -323,25 +323,25 @@
           ":" +
           currentDate.getSeconds().toString().padStart(2, "0");
 
-        $("#lblCurrentDate").text(current_date + " /");
+        $("#lblCurrentDate").text(textCurrentDate + " /");
         $("#lblCurrentTime").text(currentTime);
         $("#lblStartTime").text(
-          formatTimeFromMilliseconds(current_second * 1000)
+          formatTimeFromMilliseconds(currentSecond * 1000)
         );
-        $("#playerRange").val(current_percent);
-
-        if (current_percent >= 1) {
+        $("#playerRange").val(currentPercent);
+        
+        if (currentPercent >= 1) {
           cancelAnimationFrame(globalID);
-          current_index = 0;
-
+          currentIndex = 0;
+          
           $(".play-button-container").removeClass("playing");
           $(".pause").addClass("hidden");
           $(".play").removeClass("hidden");
-
+          
           $("#videoEnded").text("true");
         }
 
-        drawPlayer(current_second, currentTimeStamp);
+        drawPlayer(currentTimeStamp);
       }
 
       function onValueChange(value) {
@@ -353,7 +353,7 @@
         let classList = $(".play-button-container").attr("class");
         let arrClass = classList.split(/\s+/);
         let playStatus = arrClass.includes("playing");
-        current_index = duration * value * 60;
+        currentIndex = duration * value * 60;
 
         cancelAnimationFrame(globalID);
 
@@ -364,25 +364,25 @@
         }
       }
 
-      function drawPlayer(current_second, currentTimeStamp) {
-        var playerData = [];
+      function drawPlayer(currentTimeStamp) {
+        let newPlayerData = [];
 
-        player_data.some(function (data) {
+        playerData.some(function (data) {
           if (currentTimeStamp == data.time_stamp) {
             let player = {
               point: data.gps_data,
-              player_tshirt_number: data.player_tshirt_number,
+              tshirtNumber: data.player_tshirt_number,
             };
-            playerData.push(player);
+            newPlayerData.push(player);
           }
         });
 
         canvas.remove(...canvas.getObjects());
 
-        playerData.map(function (player) {
+        newPlayerData.map(function (player) {
           const distanceFromC1 = parseFloat(
             getDistanceFromPoints(stadiumData.c1, player.point)
-          );
+            );
           const distanceFromC2 = parseFloat(
             getDistanceFromPoints(stadiumData.c2, player.point)
           );
@@ -408,15 +408,15 @@
           const top = distanceFromC1 * sin1;
           const left = distanceFromC1 * sin2;
 
-          var player_circle = new fabric.Circle({
+          const playerCircle = new fabric.Circle({
             left: left * 10,
             top: top * 10,
             radius: 10,
             fill: "red",
           });
 
-          var player_number = new fabric.Text(
-            player.player_tshirt_number.toString(),
+          const playerNumber = new fabric.Text(
+            player.tshirtNumber.toString(),
             {
               fontSize: 22,
               fontWeight: "bold",
@@ -425,7 +425,7 @@
             }
           );
 
-          var group = new fabric.Group([player_circle, player_number]);
+          const group = new fabric.Group([playerCircle, playerNumber]);
           group.item(1).set("fill", "white");
           group.set("selectable", false);
 
@@ -453,17 +453,17 @@
       function getDistanceFromPoints(point1, point2) {
         const arrC1 = point1.split(",");
         const arrC2 = point2.split(",");
-        var R = 6378137; // Earth’s mean radius in meter
-        var dLat = rad(parseFloat(arrC1[0]) - parseFloat(arrC2[0].trim()));
-        var dLong = rad(parseFloat(arrC1[1]) - parseFloat(arrC2[1].trim()));
-        var a =
+        const R = 6378137; // Earth’s mean radius in meter
+        const dLat = rad(parseFloat(arrC1[0]) - parseFloat(arrC2[0].trim()));
+        const dLong = rad(parseFloat(arrC1[1]) - parseFloat(arrC2[1].trim()));
+        const a =
           Math.sin(dLat / 2) * Math.sin(dLat / 2) +
           Math.cos(rad(parseFloat(arrC1[0]))) *
             Math.cos(rad(parseFloat(arrC2[0].trim()))) *
             Math.sin(dLong / 2) *
             Math.sin(dLong / 2);
-        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        var d = R * c;
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const d = R * c;
         return d;
       }
 
